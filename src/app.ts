@@ -18,7 +18,7 @@ class Project {
 type Listener = (items: Project[]) => void;
 
 class ProjectState {
-  private listeners: any[] = [];
+  private listeners: Listener[] = [];
   private projects: Project[] = [];
   private static instance: ProjectState;
 
@@ -32,8 +32,8 @@ class ProjectState {
     return this.instance;
   }
 
-  addListener(listerneFn: Function) {
-    this.listeners.push(listerneFn);
+  addListener(listernerFn: Listener) {
+    this.listeners.push(listernerFn);
   }
 
   addProject(title: string, description: string, numOfPeople: number) {
@@ -140,8 +140,15 @@ class ProjectList {
     this.element = importedNode.firstElementChild as HTMLElement;
     this.element.id = `${this.type}-projects`;
 
-    projectState.addListener((projects: any[]) => {
-      this.assignedProjects = projects;
+    projectState.addListener((projects: Project[]) => {
+      const relevantProjects = projects.filter((prj) => {
+        if (this.type === 'active') {
+          return prj.status === ProjectStatus.Active;
+        } else {
+          return prj.status === ProjectStatus.Finished;
+        }
+      });
+      this.assignedProjects = relevantProjects;
       this.renderProjects();
     });
 
@@ -153,6 +160,7 @@ class ProjectList {
     const listEl = document.getElementById(
       `${this.type}-projects-list`
     )! as HTMLUListElement;
+    listEl.innerHTML = '';
     for (const prjItem of this.assignedProjects) {
       const listItem = document.createElement('li');
       listItem.textContent = prjItem.title;
